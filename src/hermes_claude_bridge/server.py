@@ -46,6 +46,8 @@ def create_app(engine: AsyncEngine | None = None) -> FastAPI:
         yield
 
     app = FastAPI(title="Hermes-Claude Bridge", lifespan=lifespan)
+    app.state.session_manager = session_manager
+    app.state.bridge = bridge
 
     @app.get("/health")
     async def health():
@@ -144,20 +146,15 @@ def create_app(engine: AsyncEngine | None = None) -> FastAPI:
     @app.get("/sessions/{session_id}/events")
     async def stream_events(session_id: str):
         async def event_generator() -> AsyncGenerator[dict, None]:
-            seen = 0
-            while True:
-                events = await session_manager.list_events(session_id)
-                for ev in events[seen:]:
-                    yield {
-                        "event": ev.event_type.value,
-                        "data": {
-                            "id": ev.id,
-                            "payload": ev.payload,
-                            "created_at": ev.created_at.isoformat(),
-                        },
-                    }
-                    seen = max(seen, ev.id)
-                await asyncio.sleep(1)
+            async for ev in session_manager.listen_events(session_id):
+                yield {
+                    "event": ev.event_type.value,
+                    "data": {
+                        "id": ev.id,
+                        "payload": ev.payload,
+                        "created_at": ev.created_at.isoformat(),
+                    },
+                }
 
         return EventSourceResponse(event_generator())
 
