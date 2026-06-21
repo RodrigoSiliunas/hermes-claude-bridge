@@ -13,7 +13,9 @@ import pytest
 from hermes_claude_bridge.interactive_executor import InteractiveExecutor
 
 
-@pytest.mark.skip(reason="Claude Code TUI is not reliably controllable via PTY without a real terminal")
+@pytest.mark.skip(
+    reason=("Claude Code TUI is not reliably controllable via PTY without a real terminal")
+)
 @pytest.mark.asyncio
 async def test_claude_interactive_simple():
     if not shutil.which("claude"):
