@@ -31,23 +31,24 @@ class SessionManager:
         model: str | None = None,
         permissions_mode: str = "acceptEdits",
         mode: str = "headless",
+        max_history_events: int = 10,
         metadata: dict | None = None,
     ) -> ClaudeSession:
         session_id = self._new_session_id()
         async with AsyncSession(self.engine) as db:
-            cs = ClaudeSession(
+            session = ClaudeSession(
                 session_id=session_id,
                 working_dir=working_dir,
                 model=model,
                 permissions_mode=permissions_mode,
                 mode=mode,
-                status=SessionStatus.ACTIVE,
-                metadata_json=metadata,
+                max_history_events=max_history_events,
+                metadata_json=metadata or {},
             )
-            db.add(cs)
+            db.add(session)
             await db.commit()
-            await db.refresh(cs)
-            return cs
+            await db.refresh(session)
+            return session
 
     async def get_session(self, session_id: str) -> ClaudeSession | None:
         async with AsyncSession(self.engine) as db:

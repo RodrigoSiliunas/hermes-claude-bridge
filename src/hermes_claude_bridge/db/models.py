@@ -47,6 +47,7 @@ class ClaudeSession(Base):
     model: Mapped[str | None] = mapped_column(String(64), nullable=True)
     permissions_mode: Mapped[str] = mapped_column(String(32), default="acceptEdits")
     mode: Mapped[str] = mapped_column(String(16), default="headless")
+    max_history_events: Mapped[int] = mapped_column(default=10)
     status: Mapped[SessionStatus] = mapped_column(Enum(SessionStatus), default=SessionStatus.ACTIVE)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
