@@ -6,18 +6,28 @@ reuse the existing session and remember context from the first call.
 """
 
 import json
+import os
 from typing import Any
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from hermes_claude_bridge.db.engine import get_engine, init_db
+from hermes_claude_bridge.executor import ClaudeExecutor
 from hermes_claude_bridge.plugin_template.tools import handle_delegate
 from hermes_claude_bridge.server import create_app
 
 
 @pytest.mark.asyncio
 async def test_plugin_persistent_session_on_bridge_server(tmp_path):
+    if os.getenv("SKIP_E2E"):
+        pytest.skip("SKIP_E2E is set")
+
+    executor = ClaudeExecutor(bare_mode=False)
+    health = await executor.health_check()
+    if not health["claude_installed"]:
+        pytest.skip("Claude Code CLI is not installed")
+
     engine = get_engine("sqlite+aiosqlite:///:memory:")
     await init_db(engine)
     app = create_app(engine)
