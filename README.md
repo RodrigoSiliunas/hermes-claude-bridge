@@ -20,8 +20,8 @@ Delegate development tasks from [Hermes Agent](https://hermes-agent.nousresearch
 **Omni** ([automagik-dev/omni](https://github.com/automagik-dev/omni)) showed that Telegram and other channels can talk to Claude Code. This bridge does the same for the **Hermes Agent** ecosystem, but focused on:
 
 - **No extra API costs** — reuse the Claude Code CLI subscription.
-- **Persistent sessions** — SQLite/PostgreSQL store keeps context across turns.
-- **Real-time events** — SSE stream lets Hermes monitor Claude as it works.
+- **Persistent contextual sessions** — SQLite/PostgreSQL store keeps full conversation history; every new prompt includes prior context.
+- **Real-time events** — SSE stream delivers events instantly via `asyncio.Condition`, no polling.
 - **Human-in-the-loop** — when Claude asks a question, the bridge pauses and asks the user.
 - **Model selection** — choose `sonnet`, `opus`, `haiku`, or any full model name.
 - **Headless / scriptable** — run `claude -p --bare` from Python/asyncio.
@@ -75,7 +75,7 @@ asyncio.run(main())
 
 ### Server mode (stateful)
 
-Start the bridge server for persistent sessions and SSE events:
+Start the bridge server for persistent sessions and real-time SSE events:
 
 ```bash
 hermes-claude server --port 8765
@@ -90,9 +90,11 @@ from hermes_claude_bridge.client import BridgeClient
 async def main():
     client = BridgeClient("http://localhost:8765")
 
+    # Use mode="interactive" to keep conversation context across prompts.
     session = await client.create_session(
         working_dir="/path/to/project",
         model="sonnet",
+        mode="interactive",
     )
     result = await client.send_prompt(
         session["session_id"],
@@ -220,8 +222,8 @@ To create a new release:
 ```bash
 # Update version in pyproject.toml and src/hermes_claude_bridge/__init__.py
 git add -A
-git commit -m "chore(release): bump version to v0.2.0"
-git tag v0.2.0
+git commit -m "chore(release): bump version to v0.3.0"
+git tag v0.3.0
 git push origin main --tags
 ```
 

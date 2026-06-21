@@ -1,10 +1,10 @@
 ---
 name: hermes-claude-bridge
-description: "Delegate complex coding tasks from Hermes to Claude Code CLI — sessions, events, model selection and human-in-the-loop."
-version: 0.2.0
+description: "Delegate complex coding tasks from Hermes to Claude Code CLI — persistent contextual sessions, real-time SSE events, model selection and human-in-the-loop."
+version: 0.3.0
 author: Rodrigo Siliunas
 license: MIT
-tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions]
+tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions, human-in-the-loop]
 platforms: [linux, macos, windows]
 ---
 
@@ -14,8 +14,12 @@ This skill lets Hermes Agent delegate deep coding tasks to **Claude Code CLI**
 running locally, reusing an existing Claude Code Pro/Team subscription instead
 of consuming Anthropic API tokens.
 
-Version 0.2 adds **persistent sessions**, **SSE event streaming**, **model
-selection** and **human-in-the-loop** support when Claude asks questions.
+Version 0.3 adds **persistent contextual sessions**. The bridge keeps session
+history in a database and replays prior prompts/answers into each new Claude
+request, so Claude does not lose context across turns.
+
+Version 0.2 added **real-time SSE event streaming**, **model selection** and
+**human-in-the-loop** support when Claude asks questions.
 
 ## When to use
 
@@ -139,6 +143,37 @@ result = await tool.invoke({
     "timeout": 300,
 })
 ```
+
+## Persistent contextual sessions
+
+When using the bridge server, create a session with `mode="interactive"` to keep
+context across multiple prompts:
+
+```python
+from hermes_claude_bridge.client import BridgeClient
+
+client = BridgeClient("http://localhost:8765")
+
+session = await client.create_session(
+    working_dir="/path/to/project",
+    mode="interactive",
+    model="sonnet",
+)
+session_id = session["session_id"]
+
+result = await client.send_prompt(
+    session_id,
+    "Refactor auth.py to use dependency injection",
+    context_files=["src/auth.py"],
+)
+
+if result["status"] == "waiting_user_input":
+    answer = input(result["pending_question"] + " ")
+    result = await client.answer_question(session_id, answer)
+```
+
+The bridge stores every prompt, answer and Claude response in the database and
+automatically includes the conversation history in subsequent requests.
 
 ## Handling Claude questions (human-in-the-loop)
 
