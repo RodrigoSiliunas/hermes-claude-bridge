@@ -1,6 +1,6 @@
 [project]
 name = "hermes-claude-bridge"
-version = "0.5.0"
+version = "0.6.0"
 description = "Bridge Hermes Agent ↔ Claude Code CLI — zero Anthropic API cost delegation"
 readme = "README.md"
 license = { text = "MIT" }

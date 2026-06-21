@@ -1,10 +1,10 @@
 ---
 name: hermes-claude-bridge
-description: "Delegate complex coding tasks from Hermes to Claude Code CLI — persistent contextual sessions, real-time SSE events, model selection, human-in-the-loop, MCP server and native Hermes plugin."
-version: 0.5.0
+description: "Delegate complex coding tasks from Hermes to Claude Code CLI — persistent contextual sessions, real-time SSE events, model selection, human-in-the-loop, MCP server, native Hermes plugin and one-command setup."
+version: 0.6.0
 author: Rodrigo Siliunas
 license: MIT
-tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions, human-in-the-loop, mcp, plugin]
+tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions, human-in-the-loop, mcp, plugin, setup]
 platforms: [linux, macos, windows]
 ---
 
@@ -148,6 +148,12 @@ Generate the MCP config snippet and append it to `~/.hermes/config.yaml`:
 hermes-claude setup --mcp-config >> ~/.hermes/config.yaml
 ```
 
+With a default model preset:
+
+```bash
+hermes-claude setup --mcp-config --model sonnet >> ~/.hermes/config.yaml
+```
+
 On next startup, Hermes discovers the `claude_code_delegate` tool from the
 `hermes-claude-bridge` MCP server.
 
@@ -165,6 +171,13 @@ Then enable it in `~/.hermes/config.yaml`:
 plugins:
   enabled:
     - hermes-claude-bridge
+```
+
+Set a default bridge URL via environment variable so the plugin reuses
+persistent sessions automatically:
+
+```bash
+export HERMES_CLAUDE_BRIDGE_URL=http://localhost:8765
 ```
 
 Restart Hermes.
