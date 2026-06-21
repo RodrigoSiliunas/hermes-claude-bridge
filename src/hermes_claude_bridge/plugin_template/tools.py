@@ -25,12 +25,18 @@ async def handle_delegate(args: dict[str, Any], **kwargs: Any) -> str:
 
     if bridge_url:
         client = BridgeClient(bridge_url)
-        session = await client.create_session(
-            working_dir=working_dir,
-            model=model,
-            mode=mode,
-            max_history_events=max_history_events,
+        sessions = await client.list_sessions()
+        session = next(
+            (s for s in sessions if s.get("working_dir") == working_dir),
+            None,
         )
+        if session is None:
+            session = await client.create_session(
+                working_dir=working_dir,
+                model=model,
+                mode=mode,
+                max_history_events=max_history_events,
+            )
         result = await client.send_prompt(
             session["session_id"],
             prompt,

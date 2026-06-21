@@ -50,6 +50,7 @@ def create_app(
     engine = engine or get_engine()
     session_manager = SessionManager(engine)
     bridge = HermesClaudeBridge()
+    bridge.executor.bare_mode = False
     get_interactive_executor = get_interactive_executor or _default_get_interactive_executor
 
     @asynccontextmanager
@@ -176,7 +177,9 @@ def create_app(
                 metadata={"pending_question": result.pending_question},
             )
 
-        return result.model_dump()
+        response = result.model_dump()
+        response["session_id"] = session_id
+        return response
 
     @app.post("/sessions/{session_id}/answer")
     async def answer_question(session_id: str, req: AnswerRequest):
@@ -236,6 +239,9 @@ def create_app(
         return EventSourceResponse(event_generator())
 
     return app
+
+
+app = create_app()
 
 
 if __name__ == "__main__":
