@@ -13,10 +13,17 @@ dependencies = [
     "aiofiles>=24.0",
     "structlog>=24.0",
     "click>=8.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy[asyncio]>=2.0",
+    "alembic>=1.13",
+    "aiosqlite>=0.20",
+    "sse-starlette>=2.1",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "ruff>=0.6", "pyyaml>=6.0"]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "ruff>=0.6", "pyyaml>=6.0", "httpx>=0.27"]
+postgres = ["asyncpg>=0.29"]
 
 [project.scripts]
 hermes-claude = "hermes_claude_bridge.cli:cli"
