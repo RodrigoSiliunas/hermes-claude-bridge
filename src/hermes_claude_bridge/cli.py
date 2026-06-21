@@ -93,5 +93,14 @@ def server(host: str, port: int, database_url: str | None) -> None:
     )
 
 
+@cli.command(name="mcp-server")
+@click.option("--transport", default="stdio", help="MCP transport: stdio or sse")
+def mcp_server(transport: str) -> None:
+    """Start the Hermes-Claude Bridge as an MCP server."""
+    from hermes_claude_bridge.mcp_server import mcp
+
+    mcp.run(transport=transport)
+
+
 if __name__ == "__main__":
     cli()
