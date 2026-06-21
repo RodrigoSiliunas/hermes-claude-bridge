@@ -29,6 +29,8 @@ class BridgeClient:
         working_dir: str,
         model: str | None = None,
         permissions_mode: str = "acceptEdits",
+        mode: str = "headless",
+        max_history_events: int = 10,
     ) -> dict[str, Any]:
         """Create a new Claude session on the bridge server."""
         resp = await self._http.post(
@@ -37,6 +39,8 @@ class BridgeClient:
                 "working_dir": working_dir,
                 "model": model,
                 "permissions_mode": permissions_mode,
+                "mode": mode,
+                "max_history_events": max_history_events,
             },
         )
         resp.raise_for_status()

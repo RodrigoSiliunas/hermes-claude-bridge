@@ -5,6 +5,7 @@ from __future__ import annotations
 from mcp.server.fastmcp import FastMCP
 
 from hermes_claude_bridge.bridge import HermesClaudeBridge
+from hermes_claude_bridge.client import BridgeClient
 from hermes_claude_bridge.schemas import ClaudeTask
 
 
@@ -20,12 +21,32 @@ def create_mcp_server() -> FastMCP:
         model: str | None = None,
         permission_mode: str = "acceptEdits",
         timeout: int = 300,
+        bridge_url: str | None = None,
+        mode: str = "headless",
     ) -> dict:
         """Delegate a coding task to Claude Code CLI running locally.
 
         Use this for complex refactoring, debugging, or multi-file changes.
         Requires the `claude` CLI to be installed and authenticated.
+
+        Set `bridge_url` to use a running Hermes-Claude Bridge server and
+        `mode="interactive"` to keep conversation context across calls.
         """
+        if bridge_url:
+            client = BridgeClient(bridge_url)
+            session = await client.create_session(
+                working_dir=working_dir,
+                model=model,
+                mode=mode,
+            )
+            result = await client.send_prompt(
+                session["session_id"],
+                prompt,
+                context_files=context_files or [],
+                timeout=timeout,
+            )
+            return result
+
         bridge = HermesClaudeBridge()
         result = await bridge.run_task(
             ClaudeTask(
