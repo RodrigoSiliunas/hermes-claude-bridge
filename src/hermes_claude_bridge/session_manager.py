@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import UTC, datetime
 
@@ -16,6 +17,10 @@ class SessionManager:
 
     def __init__(self, engine: AsyncEngine):
         self.engine = engine
+        self._conditions: dict[str, asyncio.Condition] = {}
+
+    def _condition(self, session_id: str) -> asyncio.Condition:
+        return self._conditions.setdefault(session_id, asyncio.Condition())
 
     def _new_session_id(self) -> str:
         return f"sess-{uuid.uuid4().hex[:12]}"
@@ -84,7 +89,11 @@ class SessionManager:
             db.add(ev)
             await db.commit()
             await db.refresh(ev)
-            return ev
+
+        cond = self._condition(session_id)
+        async with cond:
+            cond.notify_all()
+        return ev
 
     async def list_events(
         self,
@@ -101,3 +110,22 @@ class SessionManager:
                 stmt = stmt.where(SessionEvent.event_type.in_(event_types))
             result = await db.execute(stmt)
             return list(result.scalars().all())
+
+    async def listen_events(
+        self,
+        session_id: str,
+        last_id: int = 0,
+    ):
+        """Async generator that yields new SessionEvents as they are added."""
+        cond = self._condition(session_id)
+        while True:
+            events = await self.list_events(session_id)
+            for ev in events:
+                if ev.id > last_id:
+                    yield ev
+                    last_id = ev.id
+            async with cond:
+                try:
+                    await asyncio.wait_for(cond.wait(), timeout=5.0)
+                except asyncio.TimeoutError:
+                    continue
