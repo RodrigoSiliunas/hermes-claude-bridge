@@ -1,10 +1,10 @@
 ---
 name: hermes-claude-bridge
-description: "Delegate complex coding tasks from Hermes to Claude Code CLI — zero Anthropic API cost."
-version: 0.1.0
+description: "Delegate complex coding tasks from Hermes to Claude Code CLI — sessions, events, model selection and human-in-the-loop."
+version: 0.2.0
 author: Rodrigo Siliunas
 license: MIT
-tags: [hermes, claude-code, bridge, delegation, coding-agent]
+tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions]
 platforms: [linux, macos, windows]
 ---
 
@@ -13,6 +13,9 @@ platforms: [linux, macos, windows]
 This skill lets Hermes Agent delegate deep coding tasks to **Claude Code CLI**
 running locally, reusing an existing Claude Code Pro/Team subscription instead
 of consuming Anthropic API tokens.
+
+Version 0.2 adds **persistent sessions**, **SSE event streaming**, **model
+selection** and **human-in-the-loop** support when Claude asks questions.
 
 ## When to use
 
@@ -45,13 +48,29 @@ Do **not** use it for:
    claude /login
    ```
 
-3. (Recommended) Set environment variables for non-bare mode — this reuses the
+3. Start the bridge event server:
+
+   ```bash
+   hermes-claude server --port 8765
+   ```
+
+4. (Recommended) Set environment variables for non-bare mode — this reuses the
    Claude Code subscription instead of Anthropic API tokens:
 
    ```bash
    export CLAUDE_BARE=false
    export CLAUDE_PERMISSIONS=acceptEdits
    ```
+
+## Architecture
+
+```
+Hermes Agent ←—— SSE ——→ Hermes-Claude Bridge Server
+                              ↓
+                   Session Manager (SQLite/Postgres)
+                              ↓
+                   Claude Code CLI (`claude -p`)
+```
 
 ## Tool registration
 
@@ -92,6 +111,11 @@ schema = tool.get_schema()
         "default": 300,
         "description": "Timeout in seconds"
       },
+      "model": {
+        "type": "string",
+        "default": null,
+        "description": "Claude model alias: sonnet, opus, haiku, or full name"
+      },
       "permission_mode": {
         "type": "string",
         "enum": ["dontAsk", "acceptEdits", "default"],
@@ -110,9 +134,35 @@ schema = tool.get_schema()
 result = await tool.invoke({
     "prompt": "Refactor auth.py to use dependency injection",
     "context_files": ["src/auth.py"],
+    "model": "sonnet",
     "permission_mode": "acceptEdits",
     "timeout": 300,
 })
+```
+
+## Handling Claude questions (human-in-the-loop)
+
+When Claude asks a question, the result will have:
+
+```json
+{
+  "success": true,
+  "status": "waiting_user_input",
+  "pending_question": "Should I delete the old implementation?"
+}
+```
+
+Your Hermes agent should:
+
+1. Pause the task.
+2. Ask the user the `pending_question`.
+3. Send the answer back with:
+
+```python
+from hermes_claude_bridge.client import BridgeClient
+
+client = BridgeClient()
+await client.answer_question(session_id, "Yes, delete it.")
 ```
 
 ## Result format
@@ -121,11 +171,27 @@ The tool returns a dictionary with:
 
 - `success` (bool): Whether Claude exited cleanly.
 - `task_id` (str): Unique task identifier.
+- `status` (str): `active`, `waiting_user_input`, `completed`, or `failed`.
+- `pending_question` (str | None): Question Claude asked, if any.
 - `stdout` / `stderr` (str): Raw CLI output.
 - `file_edits` (list): Structured file edits (`path`, `operation`, `diff`).
 - `bash_commands` (list): Commands Claude attempted to run.
 - `duration_seconds` (float): Wall-clock duration.
 - `error` (str | None): Error message if the task failed.
+
+## Model selection
+
+Set a default model via environment variable:
+
+```bash
+export CLAUDE_MODEL=sonnet
+```
+
+Or pass per-task in the tool invocation:
+
+```python
+"model": "opus"
+```
 
 ## Safety guidelines
 

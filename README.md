@@ -20,6 +20,10 @@ Delegate development tasks from [Hermes Agent](https://hermes-agent.nousresearch
 **Omni** ([automagik-dev/omni](https://github.com/automagik-dev/omni)) showed that Telegram and other channels can talk to Claude Code. This bridge does the same for the **Hermes Agent** ecosystem, but focused on:
 
 - **No extra API costs** — reuse the Claude Code CLI subscription.
+- **Persistent sessions** — SQLite/PostgreSQL store keeps context across turns.
+- **Real-time events** — SSE stream lets Hermes monitor Claude as it works.
+- **Human-in-the-loop** — when Claude asks a question, the bridge pauses and asks the user.
+- **Model selection** — choose `sonnet`, `opus`, `haiku`, or any full model name.
 - **Headless / scriptable** — run `claude -p --bare` from Python/asyncio.
 - **Structured results** — parse file edits, bash commands, and errors from Claude's output.
 - **Hermes-native** — register as a tool (`claude_code_delegate`) inside Hermes skills.
@@ -69,6 +73,42 @@ async def main():
 asyncio.run(main())
 ```
 
+### Server mode (stateful)
+
+Start the bridge server for persistent sessions and SSE events:
+
+```bash
+hermes-claude server --port 8765
+```
+
+Then use the Python client from Hermes:
+
+```python
+import asyncio
+from hermes_claude_bridge.client import BridgeClient
+
+async def main():
+    client = BridgeClient("http://localhost:8765")
+
+    session = await client.create_session(
+        working_dir="/path/to/project",
+        model="sonnet",
+    )
+    result = await client.send_prompt(
+        session["session_id"],
+        "Refactor auth.py to use dependency injection",
+        context_files=["src/auth.py"],
+    )
+    print(result)
+
+    if result.get("status") == "waiting_user_input":
+        question = result["pending_question"]
+        # Ask the user, then:
+        await client.answer_question(session["session_id"], "Yes, proceed.")
+
+asyncio.run(main())
+```
+
 ### Hermes Skill
 
 Install the skill into your Hermes profile:
@@ -87,6 +127,7 @@ schema = tool.get_schema()  # Register with Hermes
 result = await tool.invoke({
     "prompt": "Refactor auth.py",
     "context_files": ["src/auth.py"],
+    "model": "sonnet",
     "permission_mode": "acceptEdits",
     "timeout": 300,
 })
@@ -101,22 +142,29 @@ Hermes Agent
     |
     v
 +----------------------------------+
-|  ClaudeBridgeTool (adapter)      |
-|  - JSON schema for Hermes        |
-|  - Parameter validation          |
+|  BridgeClient or ClaudeBridgeTool|
+|  - HTTP client / tool adapter    |
++----------------------------------+
+    |
+    | SSE / HTTP
+    v
++----------------------------------+
+|  Hermes-Claude Bridge Server     |
+|  - FastAPI + SSE streaming       |
+|  - Session Manager (SQLAlchemy)  |
 +----------------------------------+
     |
     v
 +----------------------------------+
 |  HermesClaudeBridge (orchestrator)|
-|  - Task queue / batching         |
+|  - Task execution                |
 |  - Health checks                 |
 +----------------------------------+
     |
     v
 +----------------------------------+
 |  ClaudeExecutor (subprocess)     |
-|  - claude -p --bare              |
+|  - claude -p [--bare]            |
 |  - Async subprocess + timeout    |
 +----------------------------------+
     |
@@ -125,6 +173,7 @@ Hermes Agent
 |  OutputParser                    |
 |  - Extract file edits            |
 |  - Extract bash commands         |
+|  - Detect questions              |
 +----------------------------------+
     |
     v
@@ -142,6 +191,8 @@ Environment variables:
 | `CLAUDE_TIMEOUT` | `300` | Default timeout in seconds |
 | `CLAUDE_BARE` | `true` | Use `--bare` mode |
 | `CLAUDE_PERMISSIONS` | `acceptEdits` | Default permission mode |
+| `CLAUDE_MODEL` | `None` | Default Claude model |
+| `DATABASE_URL` | `sqlite+aiosqlite:///./hermes_claude_bridge.db` | Async database URL |
 
 ## Permission Modes
 
