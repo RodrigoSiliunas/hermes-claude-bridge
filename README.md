@@ -21,6 +21,8 @@ Delegate development tasks from [Hermes Agent](https://hermes-agent.nousresearch
 
 - **No extra API costs** — reuse the Claude Code CLI subscription.
 - **Persistent contextual sessions** — SQLite/PostgreSQL store keeps full conversation history; every new prompt includes prior context.
+- **History filtering & compression** — cap how many past events are sent, with a compact summary of older messages.
+- **MCP server** — expose `claude_code_delegate` as a native MCP tool for Hermes or any MCP client.
 - **Real-time events** — SSE stream delivers events instantly via `asyncio.Condition`, no polling.
 - **Human-in-the-loop** — when Claude asks a question, the bridge pauses and asks the user.
 - **Model selection** — choose `sonnet`, `opus`, `haiku`, or any full model name.
@@ -91,10 +93,12 @@ async def main():
     client = BridgeClient("http://localhost:8765")
 
     # Use mode="interactive" to keep conversation context across prompts.
+    # Limit how many past events are included to avoid overflowing context.
     session = await client.create_session(
         working_dir="/path/to/project",
         model="sonnet",
         mode="interactive",
+        max_history_events=5,
     )
     result = await client.send_prompt(
         session["session_id"],
@@ -109,6 +113,35 @@ async def main():
         await client.answer_question(session["session_id"], "Yes, proceed.")
 
 asyncio.run(main())
+```
+
+### MCP server
+
+Expose the bridge as a native MCP tool:
+
+```bash
+hermes-claude mcp-server
+```
+
+Hermes (or any MCP client) can then call `claude_code_delegate`. For stateless
+single tasks:
+
+```json
+{
+  "prompt": "Refactor auth.py",
+  "context_files": ["src/auth.py"],
+  "model": "sonnet"
+}
+```
+
+For persistent sessions, point the tool at a running bridge server:
+
+```json
+{
+  "prompt": "Refactor auth.py",
+  "bridge_url": "http://localhost:8765",
+  "mode": "interactive"
+}
 ```
 
 ### Hermes Skill
@@ -222,8 +255,8 @@ To create a new release:
 ```bash
 # Update version in pyproject.toml and src/hermes_claude_bridge/__init__.py
 git add -A
-git commit -m "chore(release): bump version to v0.3.0"
-git tag v0.3.0
+git commit -m "chore(release): bump version to v0.4.0"
+git tag v0.4.0
 git push origin main --tags
 ```
 

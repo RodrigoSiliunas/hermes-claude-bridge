@@ -1,10 +1,10 @@
 ---
 name: hermes-claude-bridge
-description: "Delegate complex coding tasks from Hermes to Claude Code CLI — persistent contextual sessions, real-time SSE events, model selection and human-in-the-loop."
-version: 0.3.0
+description: "Delegate complex coding tasks from Hermes to Claude Code CLI — persistent contextual sessions, real-time SSE events, model selection, human-in-the-loop and MCP server."
+version: 0.4.0
 author: Rodrigo Siliunas
 license: MIT
-tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions, human-in-the-loop]
+tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions, human-in-the-loop, mcp]
 platforms: [linux, macos, windows]
 ---
 
@@ -14,12 +14,13 @@ This skill lets Hermes Agent delegate deep coding tasks to **Claude Code CLI**
 running locally, reusing an existing Claude Code Pro/Team subscription instead
 of consuming Anthropic API tokens.
 
-Version 0.3 adds **persistent contextual sessions**. The bridge keeps session
+Version 0.4 adds an **MCP server** so Hermes can consume the bridge as a native
+MCP tool, plus **history filtering** and **context compression** for long-running
+sessions.
+
+Version 0.3 added **persistent contextual sessions**. The bridge keeps session
 history in a database and replays prior prompts/answers into each new Claude
 request, so Claude does not lose context across turns.
-
-Version 0.2 added **real-time SSE event streaming**, **model selection** and
-**human-in-the-loop** support when Claude asks questions.
 
 ## When to use
 
@@ -174,6 +175,52 @@ if result["status"] == "waiting_user_input":
 
 The bridge stores every prompt, answer and Claude response in the database and
 automatically includes the conversation history in subsequent requests.
+
+## History filtering and compression
+
+Long sessions can exceed the context window. Set `max_history_events` when
+creating a session to keep only the most recent N relevant events:
+
+```python
+session = await client.create_session(
+    working_dir="/path/to/project",
+    mode="interactive",
+    max_history_events=5,
+)
+```
+
+When the history exceeds the limit, older events are replaced by a summary line
+(`X earlier messages omitted.`) so Claude still knows the conversation is
+ongoing without receiving every old message.
+
+## MCP server
+
+Expose the bridge as a native MCP tool:
+
+```bash
+hermes-claude mcp-server
+```
+
+The tool `claude_code_delegate` is then available to any MCP client (including
+Hermes Agent when configured with MCP support). For stateless single tasks:
+
+```json
+{
+  "prompt": "Refactor auth.py",
+  "context_files": ["src/auth.py"],
+  "model": "sonnet"
+}
+```
+
+For persistent sessions, point the tool at a running bridge server:
+
+```json
+{
+  "prompt": "Refactor auth.py",
+  "bridge_url": "http://localhost:8765",
+  "mode": "interactive"
+}
+```
 
 ## Handling Claude questions (human-in-the-loop)
 
