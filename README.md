@@ -1,5 +1,9 @@
 # Hermes-Claude Bridge
 
+[![CI](https://github.com/RodrigoSiliunas/hermes-claude-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/RodrigoSiliunas/hermes-claude-bridge/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/RodrigoSiliunas/hermes-claude-bridge?logo=github)](https://github.com/RodrigoSiliunas/hermes-claude-bridge/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Delegate development tasks from [Hermes Agent](https://hermes-agent.nousresearch.com/) to [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code/overview) — zero additional Anthropic API cost.
 
 > **Status:** early development. API may change until v1.0.0.
@@ -157,6 +161,20 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 pytest tests/ -v
 ```
+
+## Releasing
+
+To create a new release:
+
+```bash
+# Update version in pyproject.toml and src/hermes_claude_bridge/__init__.py
+git add -A
+git commit -m "chore(release): bump version to v0.2.0"
+git tag v0.2.0
+git push origin main --tags
+```
+
+The `Release` workflow will automatically build the package and create a GitHub Release with release notes.
 
 ## Testing
 
