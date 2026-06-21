@@ -23,6 +23,10 @@ class BridgeConfig(BaseModel):
         default="acceptEdits",
         description="Permission mode: dontAsk, acceptEdits, or default",
     )
+    model: str | None = Field(
+        default=None,
+        description="Default Claude model alias or full name",
+    )
 
     @classmethod
     def from_env(cls) -> BridgeConfig:
@@ -33,4 +37,5 @@ class BridgeConfig(BaseModel):
             timeout_seconds=int(os.getenv("CLAUDE_TIMEOUT", "300")),
             bare_mode=os.getenv("CLAUDE_BARE", "true").lower() == "true",
             permissions_mode=os.getenv("CLAUDE_PERMISSIONS", "acceptEdits"),
+            model=os.getenv("CLAUDE_MODEL") or None,
         )

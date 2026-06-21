@@ -36,6 +36,7 @@ class ClaudeTask(BaseModel):
     working_dir: str | None = None
     timeout_seconds: int = 300
     permissions_mode: Literal["dontAsk", "acceptEdits", "default"] = "acceptEdits"
+    model: str | None = Field(default=None, description="Claude model alias or full name")
     allowed_tools: list[str] = Field(
         default_factory=lambda: ["Bash", "Read", "Write", "Edit", "Glob", "Grep"]
     )

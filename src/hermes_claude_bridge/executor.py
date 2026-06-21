@@ -62,6 +62,9 @@ class ClaudeExecutor:
         if bare_mode:
             args.append("--bare")
 
+        if task.model:
+            args.extend(["--model", task.model])
+
         args.extend(["-p", task.prompt])
 
         if task.system_prompt_append:
