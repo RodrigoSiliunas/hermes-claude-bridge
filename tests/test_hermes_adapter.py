@@ -15,6 +15,8 @@ def test_tool_schema():
 @pytest.mark.asyncio
 async def test_tool_invoke_echo():
     tool = ClaudeBridgeTool()
-    result = await tool.invoke({"prompt": "echo hello world", "timeout": 5, "permission_mode": "dontAsk"})
+    result = await tool.invoke(
+        {"prompt": "echo hello world", "timeout": 5, "permission_mode": "dontAsk"}
+    )
     assert "task_id" in result
     assert "success" in result

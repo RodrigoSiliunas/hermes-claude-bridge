@@ -37,9 +37,7 @@ class OutputParser:
             diff_block = match.group("diff")
             # Strip markdown fences
             diff_lines = diff_block.splitlines()
-            diff_clean = "\n".join(
-                line for line in diff_lines if not line.startswith("```")
-            )
+            diff_clean = "\n".join(line for line in diff_lines if not line.startswith("```"))
             edits.append(FileEdit(path=path, diff=diff_clean, operation="edit"))
 
         # Also detect creations
@@ -60,7 +58,7 @@ class OutputParser:
                 cmds.append(BashCommand(command=cmd))
         return cmds
 
-    def enrich_result(self, result: "ClaudeResult") -> "ClaudeResult":
+    def enrich_result(self, result: ClaudeResult) -> ClaudeResult:
         """Parse raw_output and populate structured fields."""
         result.file_edits = self.extract_edits(result.raw_output)
         result.bash_commands = self.extract_bash_commands(result.raw_output)

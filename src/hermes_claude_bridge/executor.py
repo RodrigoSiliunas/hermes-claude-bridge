@@ -79,7 +79,7 @@ class ClaudeExecutor:
         )
         try:
             stdout_b, stderr_b = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             proc.kill()
             stdout_b, stderr_b = await proc.communicate()
             return BashCommand(

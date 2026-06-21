@@ -91,8 +91,7 @@ class ClaudeBridgeTool:
                 for e in result.file_edits
             ],
             "bash_commands": [
-                {"command": c.command, "exit_code": c.exit_code}
-                for c in result.bash_commands
+                {"command": c.command, "exit_code": c.exit_code} for c in result.bash_commands
             ],
             "duration_seconds": result.duration_seconds,
             "error": result.error_message,

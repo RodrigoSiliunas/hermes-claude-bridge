@@ -29,10 +29,7 @@ async def handle_complex_refactoring(file_path: str, instructions: str) -> dict:
     )
 
     if result["success"]:
-        print(
-            f"Claude completed task {result['task_id']} "
-            f"in {result['duration_seconds']:.1f}s"
-        )
+        print(f"Claude completed task {result['task_id']} in {result['duration_seconds']:.1f}s")
         for edit in result["file_edits"]:
             print(f"  - {edit['operation']}: {edit['path']}")
     else:

@@ -25,7 +25,7 @@ class BridgeConfig(BaseModel):
     )
 
     @classmethod
-    def from_env(cls) -> "BridgeConfig":
+    def from_env(cls) -> BridgeConfig:
         """Load configuration from environment variables."""
         return cls(
             claude_executable=os.getenv("CLAUDE_EXECUTABLE", "claude"),
