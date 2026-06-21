@@ -9,14 +9,17 @@ from hermes_claude_bridge.plugin_template.tools import handle_delegate
 
 
 class FakeBridgeClient:
-    def __init__(self, url: str):
-        self.url = url
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+
+    async def list_sessions(self) -> list[dict[str, Any]]:
+        return []
 
     async def create_session(self, **kwargs: Any) -> dict[str, Any]:
-        return {"session_id": "abc", "url": self.url}
+        return {"session_id": "env-session", "url": self.base_url}
 
-    async def send_prompt(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        return {"status": "completed", "url": self.url}
+    async def send_prompt(self, session_id: str, prompt: str, **kwargs: Any) -> dict[str, Any]:
+        return {"status": "completed", "url": self.base_url, "session_id": session_id}
 
     async def close(self) -> None:
         pass

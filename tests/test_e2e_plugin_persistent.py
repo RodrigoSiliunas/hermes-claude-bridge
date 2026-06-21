@@ -61,30 +61,36 @@ async def test_plugin_persistent_session_on_bridge_server(tmp_path):
     try:
         working_dir = str(tmp_path)
 
-        result1 = await handle_delegate({
-            "prompt": (
-                "Write the number 42 into a file named secret.txt in the "
-                "current directory and return done"
-            ),
-            "working_dir": working_dir,
-            "mode": "headless",
-            "bridge_url": "http://test",
-        })
+        result1 = await handle_delegate(
+            {
+                "prompt": (
+                    "Write the number 42 into a file named secret.txt in the "
+                    "current directory and return done"
+                ),
+                "working_dir": working_dir,
+                "mode": "headless",
+                "bridge_url": "http://test",
+            }
+        )
         data1 = json.loads(result1)
 
-        if "Not logged in" in data1.get("stdout", "") or "Please run /login" in data1.get("stdout", ""):
+        if "Not logged in" in data1.get("stdout", "") or "Please run /login" in data1.get(
+            "stdout", ""
+        ):
             pytest.skip("Claude Code CLI is not logged in")
 
         assert data1.get("success") is True
         assert "session_id" in data1
         session_id_1 = data1["session_id"]
 
-        result2 = await handle_delegate({
-            "prompt": "Read secret.txt and tell me the number inside it",
-            "working_dir": working_dir,
-            "mode": "headless",
-            "bridge_url": "http://test",
-        })
+        result2 = await handle_delegate(
+            {
+                "prompt": "Read secret.txt and tell me the number inside it",
+                "working_dir": working_dir,
+                "mode": "headless",
+                "bridge_url": "http://test",
+            }
+        )
         data2 = json.loads(result2)
         assert data2.get("success") is True
         assert data2["session_id"] == session_id_1

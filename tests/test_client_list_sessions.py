@@ -1,6 +1,5 @@
 """Tests for BridgeClient.list_sessions."""
 
-import json
 from typing import Any
 
 import pytest

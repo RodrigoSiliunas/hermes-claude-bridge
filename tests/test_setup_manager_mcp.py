@@ -16,9 +16,14 @@ def test_generate_mcp_config():
 
 def test_generate_mcp_config_with_model_preset():
     config = generate_mcp_config(model="sonnet")
-    assert config["mcp_servers"]["hermes-claude-bridge"]["env"]["CLAUDE_MODEL"] == "claude-sonnet-4-20250514"
+    assert (
+        config["mcp_servers"]["hermes-claude-bridge"]["env"]["CLAUDE_MODEL"]
+        == "claude-sonnet-4-20250514"
+    )
 
 
 def test_generate_mcp_config_with_raw_model():
     config = generate_mcp_config(model="custom-model-123")
-    assert config["mcp_servers"]["hermes-claude-bridge"]["env"]["CLAUDE_MODEL"] == "custom-model-123"
+    assert (
+        config["mcp_servers"]["hermes-claude-bridge"]["env"]["CLAUDE_MODEL"] == "custom-model-123"
+    )

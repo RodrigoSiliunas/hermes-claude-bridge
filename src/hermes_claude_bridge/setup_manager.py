@@ -6,7 +6,6 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-
 MODEL_PRESETS = {
     "sonnet": "claude-sonnet-4-20250514",
     "opus": "claude-opus-4-20250514",

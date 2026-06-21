@@ -107,8 +107,17 @@ def mcp_server(transport: str) -> None:
 @click.option("--mcp-config", is_flag=True, help="Print MCP server config for Hermes")
 @click.option("--hermes-plugin", is_flag=True, help="Install the Hermes plugin")
 @click.option("--plugins-dir", default=None, help="Target directory for Hermes plugins")
-@click.option("--model", default=None, help="Default Claude model preset (sonnet, opus, haiku or raw model string)")
-def setup(mcp_config: bool, hermes_plugin: bool, plugins_dir: str | None, model: str | None) -> None:
+@click.option(
+    "--model",
+    default=None,
+    help="Default Claude model preset (sonnet, opus, haiku or raw model string)",
+)
+def setup(
+    mcp_config: bool,
+    hermes_plugin: bool,
+    plugins_dir: str | None,
+    model: str | None,
+) -> None:
     """Print setup snippets or install the Hermes plugin."""
     import yaml
 
