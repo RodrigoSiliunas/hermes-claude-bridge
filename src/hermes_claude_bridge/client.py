@@ -52,6 +52,12 @@ class BridgeClient:
         resp.raise_for_status()
         return resp.json()
 
+    async def list_sessions(self) -> list[dict[str, Any]]:
+        """List active sessions on the bridge server."""
+        resp = await self._http.get("/sessions")
+        resp.raise_for_status()
+        return resp.json().get("sessions", [])
+
     async def send_prompt(
         self,
         session_id: str,

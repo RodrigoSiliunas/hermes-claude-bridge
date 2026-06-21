@@ -57,6 +57,11 @@ class SessionManager:
             )
             return result.scalar_one_or_none()
 
+    async def list_sessions(self) -> list[ClaudeSession]:
+        async with AsyncSession(self.engine) as db:
+            result = await db.execute(select(ClaudeSession).order_by(ClaudeSession.created_at))
+            return list(result.scalars().all())
+
     async def update_status(
         self,
         session_id: str,

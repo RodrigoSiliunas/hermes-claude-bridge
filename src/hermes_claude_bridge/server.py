@@ -85,6 +85,24 @@ def create_app(
             "max_history_events": session.max_history_events,
         }
 
+    @app.get("/sessions")
+    async def list_sessions():
+        sessions = await session_manager.list_sessions()
+        return {
+            "sessions": [
+                {
+                    "session_id": s.session_id,
+                    "status": s.status.value,
+                    "model": s.model,
+                    "permissions_mode": s.permissions_mode,
+                    "mode": s.mode,
+                    "working_dir": s.working_dir,
+                    "max_history_events": s.max_history_events,
+                }
+                for s in sessions
+            ]
+        }
+
     @app.get("/sessions/{session_id}")
     async def get_session(session_id: str):
         session = await session_manager.get_session(session_id)
