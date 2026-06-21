@@ -3,28 +3,28 @@
 from __future__ import annotations
 
 import enum
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import JSON, DateTime, Enum, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Base(DeclarativeBase):
     pass
 
 
-class SessionStatus(str, enum.Enum):
+class SessionStatus(enum.StrEnum):
     ACTIVE = "active"
     WAITING_USER_INPUT = "waiting_user_input"
     COMPLETED = "completed"
     FAILED = "failed"
 
 
-class EventType(str, enum.Enum):
+class EventType(enum.StrEnum):
     USER_PROMPT = "user_prompt"
     CLAUDE_RESPONSE = "claude_response"
     TOOL_CALL = "tool_call"
@@ -46,13 +46,9 @@ class ClaudeSession(Base):
     working_dir: Mapped[str] = mapped_column(Text)
     model: Mapped[str | None] = mapped_column(String(64), nullable=True)
     permissions_mode: Mapped[str] = mapped_column(String(32), default="acceptEdits")
-    status: Mapped[SessionStatus] = mapped_column(
-        Enum(SessionStatus), default=SessionStatus.ACTIVE
-    )
+    status: Mapped[SessionStatus] = mapped_column(Enum(SessionStatus), default=SessionStatus.ACTIVE)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=utc_now, onupdate=utc_now
-    )
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)
     metadata_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 

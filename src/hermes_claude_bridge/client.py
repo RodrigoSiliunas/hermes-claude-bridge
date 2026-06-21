@@ -82,14 +82,14 @@ class BridgeClient:
         Requires an external SSE parser such as `sseclient-py` or `aiohttp-sse-client`.
         For simplicity, this method yields raw EventSource lines.
         """
-        async with httpx.AsyncClient(timeout=None) as client:
-            async with client.stream(
-                "GET", f"{self.base_url}/sessions/{session_id}/events"
-            ) as response:
-                response.raise_for_status()
-                async for line in response.aiter_lines():
-                    if line.startswith("data: "):
-                        yield {"data": line[6:]}
+        async with (
+            httpx.AsyncClient(timeout=None) as client,
+            client.stream("GET", f"{self.base_url}/sessions/{session_id}/events") as response,
+        ):
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                if line.startswith("data: "):
+                    yield {"data": line[6:]}
 
     async def close(self) -> None:
         """Close the underlying HTTP client."""

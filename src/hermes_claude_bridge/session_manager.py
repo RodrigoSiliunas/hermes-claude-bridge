@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -62,7 +62,7 @@ class SessionManager:
             cs = result.scalar_one_or_none()
             if cs:
                 cs.status = status
-                cs.updated_at = datetime.now(timezone.utc)
+                cs.updated_at = datetime.now(UTC)
                 if metadata:
                     cs.metadata_json = {**(cs.metadata_json or {}), **metadata}
                 await db.commit()

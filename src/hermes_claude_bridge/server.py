@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
