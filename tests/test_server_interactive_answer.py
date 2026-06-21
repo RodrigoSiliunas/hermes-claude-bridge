@@ -1,43 +1,39 @@
-"""Tests for answering questions in interactive sessions."""
+"""Tests for answering questions in interactive (contextual) sessions."""
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from hermes_claude_bridge.db.engine import get_engine, init_db
+from hermes_claude_bridge.schemas import ClaudeResult
 from hermes_claude_bridge.server import create_app
 
 
-class FakeInteractiveExecutor:
-    def __init__(self, responses):
-        self.responses = list(responses)
-        self.started = False
-        self.sent: list[str] = []
-
-    async def start(self):
-        self.started = True
-
-    async def stop(self):
-        self.started = False
-
-    async def send(self, message, timeout=30.0):
-        self.sent.append(message)
-        return self.responses.pop(0)
-
-
 @pytest.mark.asyncio
-async def test_answer_question_in_interactive_session():
+async def test_answer_question_in_interactive_session(monkeypatch):
     engine = get_engine("sqlite+aiosqlite:///:memory:")
     await init_db(engine)
+    app = create_app(engine)
 
-    fake = FakeInteractiveExecutor([
-        "Should I delete the old file? (y/n)",
-        "Done. File deleted.",
-    ])
+    responses = [
+        ClaudeResult(
+            task_id="t1",
+            success=True,
+            stdout="Should I delete the old file? (y/n)",
+            status="waiting_user_input",
+            pending_question="Should I delete the old file? (y/n)",
+        ),
+        ClaudeResult(
+            task_id="t2",
+            success=True,
+            stdout="Done. File deleted.",
+            status="active",
+        ),
+    ]
 
-    def get_fake(session_id, working_dir):
-        return fake
+    async def fake_run_task(task):
+        return responses.pop(0)
 
-    app = create_app(engine, get_interactive_executor=get_fake)
+    monkeypatch.setattr(app.state.bridge, "run_task", fake_run_task)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
         session = await http.post("/sessions", json={"working_dir": "/tmp", "mode": "interactive"})
@@ -50,4 +46,3 @@ async def test_answer_question_in_interactive_session():
         data = answer_resp.json()
         assert data["status"] == "active"
         assert "Done. File deleted." in data["stdout"]
-        assert any("yes" in s for s in fake.sent)

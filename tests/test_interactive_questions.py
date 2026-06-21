@@ -1,38 +1,29 @@
-"""Tests for question detection in interactive mode."""
+"""Tests for question detection in interactive (contextual) mode."""
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from hermes_claude_bridge.db.engine import get_engine, init_db
+from hermes_claude_bridge.schemas import ClaudeResult
 from hermes_claude_bridge.server import create_app
 
 
-class FakeInteractiveExecutor:
-    def __init__(self, responses):
-        self.responses = list(responses)
-        self.started = False
-
-    async def start(self):
-        self.started = True
-
-    async def stop(self):
-        self.started = False
-
-    async def send(self, message, timeout=30.0):
-        return self.responses.pop(0)
-
-
 @pytest.mark.asyncio
-async def test_interactive_prompt_detects_question():
+async def test_interactive_prompt_detects_question(monkeypatch):
     engine = get_engine("sqlite+aiosqlite:///:memory:")
     await init_db(engine)
+    app = create_app(engine)
 
-    fake = FakeInteractiveExecutor(["Should I delete the old file? (y/n)"])
+    async def fake_run_task(task):
+        return ClaudeResult(
+            task_id="t1",
+            success=True,
+            stdout="Should I delete the old file? (y/n)",
+            status="waiting_user_input",
+            pending_question="Should I delete the old file? (y/n)",
+        )
 
-    def get_fake(session_id, working_dir):
-        return fake
-
-    app = create_app(engine, get_interactive_executor=get_fake)
+    monkeypatch.setattr(app.state.bridge, "run_task", fake_run_task)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
         session = await http.post("/sessions", json={"working_dir": "/tmp", "mode": "interactive"})

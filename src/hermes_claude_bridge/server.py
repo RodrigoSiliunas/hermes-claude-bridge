@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sse_starlette.sse import EventSourceResponse
 
 from hermes_claude_bridge.bridge import HermesClaudeBridge
+from hermes_claude_bridge.context_builder import build_contextual_prompt
 from hermes_claude_bridge.db.engine import get_engine, init_db
 from hermes_claude_bridge.db.models import SessionStatus
 from hermes_claude_bridge.interactive_executor import InteractiveExecutor
@@ -111,25 +112,25 @@ def create_app(
         return await bridge.run_task(task)
 
     async def _run_interactive(session_id: str, session, req: PromptRequest):
-        executors = app.state.interactive_executors
-        executor = executors.get(session_id)
-        if executor is None:
-            executor = get_interactive_executor(session_id, session.working_dir)
-            await executor.start()
-            executors[session_id] = executor
+        """Run a prompt while preserving session history.
 
-        response = await executor.send(req.prompt + "\n", timeout=req.timeout)
+        We keep a logical interactive session by replaying prior prompts and
+        answers in the prompt context, rather than trying to keep the Claude
+        Code TUI process alive (which is fragile without a real terminal).
+        """
+        history = await session_manager.list_events(session_id)
+        contextual_prompt = build_contextual_prompt(req.prompt, history)
 
-        question = parser.detect_question(response)
-        status = "waiting_user_input" if question else "active"
-
-        return ClaudeResult(
-            task_id=session_id,
-            success=True,
-            stdout=response,
-            status=status,  # type: ignore[arg-type]
-            pending_question=question,
+        task = ClaudeTask(
+            prompt=contextual_prompt,
+            context_files=req.context_files,
+            working_dir=session.working_dir,
+            timeout_seconds=req.timeout,
+            permissions_mode=session.permissions_mode,  # type: ignore[arg-type]
+            model=session.model,
         )
+        result = await bridge.run_task(task)
+        return result
 
     @app.post("/sessions/{session_id}/prompt")
     async def send_prompt(session_id: str, req: PromptRequest):
@@ -168,20 +169,18 @@ def create_app(
         await session_manager.update_status(session_id, SessionStatus.ACTIVE)
 
         if session.mode == "interactive":
-            executors = app.state.interactive_executors
-            executor = executors.get(session_id)
-            if executor is None:
-                raise HTTPException(status_code=400, detail="Interactive session not started")
-            response = await executor.send(req.answer + "\n")
-            question = parser.detect_question(response)
-            status = "waiting_user_input" if question else "active"
-            result = ClaudeResult(
-                task_id=session_id,
-                success=True,
-                stdout=response,
-                status=status,  # type: ignore[arg-type]
-                pending_question=question,
+            history = await session_manager.list_events(session_id)
+            contextual_prompt = build_contextual_prompt(
+                f"The user answered: {req.answer}", history
             )
+            task = ClaudeTask(
+                prompt=contextual_prompt,
+                working_dir=session.working_dir,
+                timeout_seconds=300,
+                permissions_mode=session.permissions_mode,  # type: ignore[arg-type]
+                model=session.model,
+            )
+            result = await bridge.run_task(task)
         else:
             task = ClaudeTask(
                 prompt=f"The user answered: {req.answer}",
