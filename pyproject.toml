@@ -1,0 +1,38 @@
+[project]
+name = "hermes-claude-bridge"
+version = "0.1.0"
+description = "Bridge Hermes Agent ↔ Claude Code CLI — zero Anthropic API cost delegation"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Rodrigo Siliunas", email = "rodrigo.siliunas@example.com" },
+]
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+    "aiofiles>=24.0",
+    "structlog>=24.0",
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23", "ruff>=0.6"]
+
+[project.scripts]
+hermes-claude = "hermes_claude_bridge.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/RodrigoSiliunas/hermes-claude-bridge"
+Repository = "https://github.com/RodrigoSiliunas/hermes-claude-bridge"
+Issues = "https://github.com/RodrigoSiliunas/hermes-claude-bridge/issues"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
