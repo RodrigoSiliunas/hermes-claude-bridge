@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from typing import Any
 
 import click
@@ -104,14 +105,22 @@ def mcp_server(transport: str) -> None:
 
 @cli.command()
 @click.option("--mcp-config", is_flag=True, help="Print MCP server config for Hermes")
-def setup(mcp_config: bool) -> None:
-    """Print setup snippets for Hermes Agent integration."""
+@click.option("--hermes-plugin", is_flag=True, help="Install the Hermes plugin")
+@click.option("--plugins-dir", default=None, help="Target directory for Hermes plugins")
+def setup(mcp_config: bool, hermes_plugin: bool, plugins_dir: str | None) -> None:
+    """Print setup snippets or install the Hermes plugin."""
     import yaml
 
     if mcp_config:
         from hermes_claude_bridge.setup_manager import generate_mcp_config
 
         click.echo(yaml.dump(generate_mcp_config(), sort_keys=False))
+    elif hermes_plugin:
+        from hermes_claude_bridge.setup_manager import install_hermes_plugin
+
+        target = plugins_dir or os.path.expanduser("~/.hermes/plugins")
+        path = install_hermes_plugin(target)
+        click.echo(f"Hermes plugin installed at {path}")
     else:
         click.echo("Use --mcp-config or --hermes-plugin")
 
