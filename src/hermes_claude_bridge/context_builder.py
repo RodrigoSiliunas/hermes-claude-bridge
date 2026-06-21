@@ -19,7 +19,11 @@ def _format_event(event: SessionEvent) -> str:
     return ""
 
 
-def build_contextual_prompt(current_prompt: str, history: list[SessionEvent]) -> str:
+def build_contextual_prompt(
+    current_prompt: str,
+    history: list[SessionEvent],
+    max_history_events: int = 10,
+) -> str:
     """Append relevant session history to the current prompt.
 
     This gives Claude Code a persistent conversation context without keeping
@@ -38,5 +42,6 @@ def build_contextual_prompt(current_prompt: str, history: list[SessionEvent]) ->
     if not relevant:
         return current_prompt
 
-    history_block = "\n".join(relevant)
+    limited = relevant[-max_history_events:]
+    history_block = "\n".join(limited)
     return f"Previous conversation for context:\n{history_block}\n\nNew request:\n{current_prompt}"
