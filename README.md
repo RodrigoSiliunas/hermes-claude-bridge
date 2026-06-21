@@ -65,7 +65,15 @@ async def main():
 asyncio.run(main())
 ```
 
-### Hermes Tool
+### Hermes Skill
+
+Install the skill into your Hermes profile:
+
+```bash
+cp -r .skills/hermes-claude-bridge ~/.hermes/skills/
+```
+
+Then register the tool in your agent:
 
 ```python
 from hermes_claude_bridge.hermes_adapter import ClaudeBridgeTool
@@ -79,6 +87,8 @@ result = await tool.invoke({
     "timeout": 300,
 })
 ```
+
+See `.skills/hermes-claude-bridge/SKILL.md` for the full skill definition.
 
 ## Architecture
 
