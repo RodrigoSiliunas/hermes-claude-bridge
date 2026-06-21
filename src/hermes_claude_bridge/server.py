@@ -24,6 +24,7 @@ class CreateSessionRequest(BaseModel):
     model: str | None = None
     permissions_mode: str = "acceptEdits"
     mode: str = "headless"
+    max_history_events: int = 10
 
 
 class PromptRequest(BaseModel):
@@ -73,6 +74,7 @@ def create_app(
             model=req.model,
             permissions_mode=req.permissions_mode,
             mode=req.mode,
+            max_history_events=req.max_history_events,
         )
         return {
             "session_id": session.session_id,
@@ -80,6 +82,7 @@ def create_app(
             "model": session.model,
             "permissions_mode": session.permissions_mode,
             "mode": session.mode,
+            "max_history_events": session.max_history_events,
         }
 
     @app.get("/sessions/{session_id}")
@@ -93,6 +96,7 @@ def create_app(
             "model": session.model,
             "permissions_mode": session.permissions_mode,
             "mode": session.mode,
+            "max_history_events": session.max_history_events,
             "created_at": session.created_at.isoformat(),
             "updated_at": session.updated_at.isoformat(),
         }
