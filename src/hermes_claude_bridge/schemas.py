@@ -55,6 +55,8 @@ class ClaudeResult(BaseModel):
     raw_output: str = ""
     duration_seconds: float = 0.0
     error_message: str | None = None
+    status: Literal["active", "waiting_user_input", "completed", "failed"] = "active"
+    pending_question: str | None = None
 
 
 class BridgeHealth(BaseModel):

@@ -28,6 +28,8 @@ class OutputParser:
         re.IGNORECASE,
     )
 
+    QUESTION_PATTERN = re.compile(r"([^.?!]*\?)", re.MULTILINE)
+
     def extract_edits(self, raw_output: str) -> list[FileEdit]:
         """Extract file edits from Claude output."""
         edits: list[FileEdit] = []
@@ -58,8 +60,24 @@ class OutputParser:
                 cmds.append(BashCommand(command=cmd))
         return cmds
 
+    def detect_question(self, raw_output: str) -> str | None:
+        """Detect if Claude is asking the user a question.
+
+        Heuristic: find the first sentence ending in '?' that is long enough
+        to be a substantive question.
+        """
+        for match in self.QUESTION_PATTERN.finditer(raw_output):
+            question = match.group(1).strip()
+            if len(question) >= 10:
+                return question
+        return None
+
     def enrich_result(self, result: ClaudeResult) -> ClaudeResult:
         """Parse raw_output and populate structured fields."""
         result.file_edits = self.extract_edits(result.raw_output)
         result.bash_commands = self.extract_bash_commands(result.raw_output)
+        question = self.detect_question(result.raw_output)
+        if question:
+            result.pending_question = question
+            result.status = "waiting_user_input"
         return result
