@@ -73,5 +73,25 @@ def run_file(ctx: click.Context, prompt_file) -> None:
     click.echo(_json_dumps(result.model_dump()))
 
 
+@cli.command()
+@click.option("--host", default="0.0.0.0", help="Server host")
+@click.option("--port", default=8765, help="Server port")
+@click.option("--database-url", default=None, help="Database URL")
+def server(host: str, port: int, database_url: str | None) -> None:
+    """Start the Hermes-Claude Bridge event server."""
+    import os
+
+    import uvicorn
+
+    if database_url:
+        os.environ["DATABASE_URL"] = database_url
+    uvicorn.run(
+        "hermes_claude_bridge.server:create_app",
+        factory=True,
+        host=host,
+        port=port,
+    )
+
+
 if __name__ == "__main__":
     cli()
