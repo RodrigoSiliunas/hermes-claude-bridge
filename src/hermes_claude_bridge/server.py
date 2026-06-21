@@ -22,6 +22,7 @@ class CreateSessionRequest(BaseModel):
     working_dir: str
     model: str | None = None
     permissions_mode: str = "acceptEdits"
+    mode: str = "headless"
 
 
 class PromptRequest(BaseModel):
@@ -59,12 +60,14 @@ def create_app(engine: AsyncEngine | None = None) -> FastAPI:
             working_dir=req.working_dir,
             model=req.model,
             permissions_mode=req.permissions_mode,
+            mode=req.mode,
         )
         return {
             "session_id": session.session_id,
             "status": session.status.value,
             "model": session.model,
             "permissions_mode": session.permissions_mode,
+            "mode": session.mode,
         }
 
     @app.get("/sessions/{session_id}")
@@ -77,6 +80,7 @@ def create_app(engine: AsyncEngine | None = None) -> FastAPI:
             "status": session.status.value,
             "model": session.model,
             "permissions_mode": session.permissions_mode,
+            "mode": session.mode,
             "created_at": session.created_at.isoformat(),
             "updated_at": session.updated_at.isoformat(),
         }

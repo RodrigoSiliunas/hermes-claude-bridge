@@ -30,6 +30,7 @@ class SessionManager:
         working_dir: str,
         model: str | None = None,
         permissions_mode: str = "acceptEdits",
+        mode: str = "headless",
         metadata: dict | None = None,
     ) -> ClaudeSession:
         session_id = self._new_session_id()
@@ -39,6 +40,7 @@ class SessionManager:
                 working_dir=working_dir,
                 model=model,
                 permissions_mode=permissions_mode,
+                mode=mode,
                 status=SessionStatus.ACTIVE,
                 metadata_json=metadata,
             )
