@@ -129,5 +129,5 @@ class SessionManager:
             async with cond:
                 try:
                     await asyncio.wait_for(cond.wait(), timeout=5.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue

@@ -39,7 +39,10 @@ async def test_answer_question_in_interactive_session(monkeypatch):
         session = await http.post("/sessions", json={"working_dir": "/tmp", "mode": "interactive"})
         session_id = session.json()["session_id"]
 
-        question_resp = await http.post(f"/sessions/{session_id}/prompt", json={"prompt": "clean up", "timeout": 5})
+        question_resp = await http.post(
+            f"/sessions/{session_id}/prompt",
+            json={"prompt": "clean up", "timeout": 5},
+        )
         assert question_resp.json()["status"] == "waiting_user_input"
 
         answer_resp = await http.post(f"/sessions/{session_id}/answer", json={"answer": "yes"})

@@ -6,7 +6,6 @@ import asyncio
 import os
 import pty
 import shutil
-import struct
 import termios
 from typing import Any
 
@@ -66,7 +65,7 @@ class InteractiveExecutor:
         try:
             self._process.terminate()
             await asyncio.wait_for(self._process.wait(), timeout=5.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._process.kill()
             await self._process.wait()
         finally:

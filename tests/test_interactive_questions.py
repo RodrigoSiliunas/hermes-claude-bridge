@@ -29,7 +29,10 @@ async def test_interactive_prompt_detects_question(monkeypatch):
         session = await http.post("/sessions", json={"working_dir": "/tmp", "mode": "interactive"})
         session_id = session.json()["session_id"]
 
-        result = await http.post(f"/sessions/{session_id}/prompt", json={"prompt": "clean up", "timeout": 5})
+        result = await http.post(
+            f"/sessions/{session_id}/prompt",
+            json={"prompt": "clean up", "timeout": 5},
+        )
         data = result.json()
 
         assert data["status"] == "waiting_user_input"

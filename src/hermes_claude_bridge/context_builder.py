@@ -28,14 +28,15 @@ def build_contextual_prompt(current_prompt: str, history: list[SessionEvent]) ->
     relevant = [
         _format_event(ev)
         for ev in history
-        if ev.event_type in {EventType.USER_PROMPT, EventType.USER_ANSWER, EventType.CLAUDE_RESPONSE}
+        if ev.event_type
+        in {
+            EventType.USER_PROMPT,
+            EventType.USER_ANSWER,
+            EventType.CLAUDE_RESPONSE,
+        }
     ]
     if not relevant:
         return current_prompt
 
     history_block = "\n".join(relevant)
-    return (
-        "Previous conversation for context:\n"
-        f"{history_block}\n\n"
-        f"New request:\n{current_prompt}"
-    )
+    return f"Previous conversation for context:\n{history_block}\n\nNew request:\n{current_prompt}"

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -16,8 +15,7 @@ from hermes_claude_bridge.context_builder import build_contextual_prompt
 from hermes_claude_bridge.db.engine import get_engine, init_db
 from hermes_claude_bridge.db.models import SessionStatus
 from hermes_claude_bridge.interactive_executor import InteractiveExecutor
-from hermes_claude_bridge.parser import OutputParser
-from hermes_claude_bridge.schemas import ClaudeResult, ClaudeTask
+from hermes_claude_bridge.schemas import ClaudeTask
 from hermes_claude_bridge.session_manager import SessionManager
 
 
@@ -51,7 +49,6 @@ def create_app(
     engine = engine or get_engine()
     session_manager = SessionManager(engine)
     bridge = HermesClaudeBridge()
-    parser = OutputParser()
     get_interactive_executor = get_interactive_executor or _default_get_interactive_executor
 
     @asynccontextmanager
@@ -170,9 +167,7 @@ def create_app(
 
         if session.mode == "interactive":
             history = await session_manager.list_events(session_id)
-            contextual_prompt = build_contextual_prompt(
-                f"The user answered: {req.answer}", history
-            )
+            contextual_prompt = build_contextual_prompt(f"The user answered: {req.answer}", history)
             task = ClaudeTask(
                 prompt=contextual_prompt,
                 working_dir=session.working_dir,
