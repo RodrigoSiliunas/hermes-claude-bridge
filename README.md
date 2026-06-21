@@ -75,6 +75,38 @@ async def main():
 asyncio.run(main())
 ```
 
+## Setup for Hermes Agent
+
+### Option A: MCP server (recommended for tool-gateway style)
+
+Generate the MCP config and merge it into `~/.hermes/config.yaml`:
+
+```bash
+hermes-claude setup --mcp-config >> ~/.hermes/config.yaml
+```
+
+The snippet registers `hermes-claude-bridge` as an MCP stdio server. Hermes
+will auto-discover the `claude_code_delegate` tool on next startup.
+
+### Option B: Native Hermes plugin
+
+Install the plugin and enable it in Hermes:
+
+```bash
+hermes-claude setup --hermes-plugin
+```
+
+Then add to `~/.hermes/config.yaml`:
+
+```yaml
+plugins:
+  enabled:
+    - hermes-claude-bridge
+```
+
+Restart Hermes. The tool `claude_code_delegate` will be available in the
+`hermes-claude-bridge` toolset.
+
 ### Server mode (stateful)
 
 Start the bridge server for persistent sessions and real-time SSE events:

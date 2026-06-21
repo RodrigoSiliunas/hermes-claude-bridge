@@ -1,10 +1,10 @@
 ---
 name: hermes-claude-bridge
-description: "Delegate complex coding tasks from Hermes to Claude Code CLI — persistent contextual sessions, real-time SSE events, model selection, human-in-the-loop and MCP server."
-version: 0.4.0
+description: "Delegate complex coding tasks from Hermes to Claude Code CLI — persistent contextual sessions, real-time SSE events, model selection, human-in-the-loop, MCP server and native Hermes plugin."
+version: 0.5.0
 author: Rodrigo Siliunas
 license: MIT
-tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions, human-in-the-loop, mcp]
+tags: [hermes, claude-code, bridge, delegation, coding-agent, sse, sessions, human-in-the-loop, mcp, plugin]
 platforms: [linux, macos, windows]
 ---
 
@@ -14,7 +14,10 @@ This skill lets Hermes Agent delegate deep coding tasks to **Claude Code CLI**
 running locally, reusing an existing Claude Code Pro/Team subscription instead
 of consuming Anthropic API tokens.
 
-Version 0.4 adds an **MCP server** so Hermes can consume the bridge as a native
+Version 0.5 adds **plug-and-play Hermes integration**: generate an MCP config
+snippet or install a native Hermes plugin with one command.
+
+Version 0.4 added an **MCP server** so Hermes can consume the bridge as a native
 MCP tool, plus **history filtering** and **context compression** for long-running
 sessions.
 
@@ -133,6 +136,39 @@ schema = tool.get_schema()
 }
 ```
 
+## Setup in Hermes Agent
+
+Choose one of the two integration paths.
+
+### Option A: MCP server
+
+Generate the MCP config snippet and append it to `~/.hermes/config.yaml`:
+
+```bash
+hermes-claude setup --mcp-config >> ~/.hermes/config.yaml
+```
+
+On next startup, Hermes discovers the `claude_code_delegate` tool from the
+`hermes-claude-bridge` MCP server.
+
+### Option B: Native Hermes plugin
+
+Install the plugin:
+
+```bash
+hermes-claude setup --hermes-plugin
+```
+
+Then enable it in `~/.hermes/config.yaml`:
+
+```yaml
+plugins:
+  enabled:
+    - hermes-claude-bridge
+```
+
+Restart Hermes.
+
 ## Invocation example
 
 ```python
@@ -141,10 +177,10 @@ result = await tool.invoke({
     "context_files": ["src/auth.py"],
     "model": "sonnet",
     "permission_mode": "acceptEdits",
-    "timeout": 300,
 })
 ```
 
+Or, for persistent sessions via the bridge server:
 ## Persistent contextual sessions
 
 When using the bridge server, create a session with `mode="interactive"` to keep
