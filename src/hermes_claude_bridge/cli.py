@@ -102,5 +102,19 @@ def mcp_server(transport: str) -> None:
     mcp.run(transport=transport)
 
 
+@cli.command()
+@click.option("--mcp-config", is_flag=True, help="Print MCP server config for Hermes")
+def setup(mcp_config: bool) -> None:
+    """Print setup snippets for Hermes Agent integration."""
+    import yaml
+
+    if mcp_config:
+        from hermes_claude_bridge.setup_manager import generate_mcp_config
+
+        click.echo(yaml.dump(generate_mcp_config(), sort_keys=False))
+    else:
+        click.echo("Use --mcp-config or --hermes-plugin")
+
+
 if __name__ == "__main__":
     cli()
