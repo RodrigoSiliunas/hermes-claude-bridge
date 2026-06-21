@@ -17,8 +17,9 @@ logger = structlog.get_logger(__name__)
 class ClaudeExecutor:
     """Executes Claude Code CLI tasks and captures results."""
 
-    def __init__(self, claude_executable: str = "claude"):
+    def __init__(self, claude_executable: str = "claude", bare_mode: bool = True):
         self.claude_executable = claude_executable
+        self.bare_mode = bare_mode
 
     async def health_check(self) -> dict:
         """Check if claude CLI is available."""
@@ -42,8 +43,11 @@ class ClaudeExecutor:
             "claude_path": claude_path,
         }
 
-    def _build_args(self, task: ClaudeTask) -> list[str]:
+    def _build_args(self, task: ClaudeTask, bare_mode: bool | None = None) -> list[str]:
         """Build claude CLI arguments from task."""
+        if bare_mode is None:
+            bare_mode = self.bare_mode
+
         args = [self.claude_executable]
 
         if task.permissions_mode == "dontAsk":
@@ -55,7 +59,9 @@ class ClaudeExecutor:
             for tool in task.allowed_tools:
                 args.extend(["--allowedTools", tool])
 
-        args.append("--bare")
+        if bare_mode:
+            args.append("--bare")
+
         args.extend(["-p", task.prompt])
 
         if task.system_prompt_append:

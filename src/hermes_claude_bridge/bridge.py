@@ -20,7 +20,10 @@ class HermesClaudeBridge:
 
     def __init__(self, config: BridgeConfig | None = None):
         self.config = config or BridgeConfig.from_env()
-        self.executor = ClaudeExecutor(self.config.claude_executable)
+        self.executor = ClaudeExecutor(
+            self.config.claude_executable,
+            bare_mode=self.config.bare_mode,
+        )
         self.parser = OutputParser()
 
     async def health(self) -> dict:
