@@ -7,21 +7,32 @@ from pathlib import Path
 from typing import Any
 
 
+MODEL_PRESETS = {
+    "sonnet": "claude-sonnet-4-20250514",
+    "opus": "claude-opus-4-20250514",
+    "haiku": "claude-haiku-3-20240307",
+}
+
+
 def generate_mcp_config(
     command: str = "hermes-claude",
     args: list[str] | None = None,
+    model: str | None = None,
 ) -> dict[str, Any]:
     """Return an MCP server config snippet for Hermes Agent.
 
     The result can be merged into ``~/.hermes/config.yaml`` under the
     ``mcp_servers`` key.
     """
+    env: dict[str, str] = {}
+    if model:
+        env["CLAUDE_MODEL"] = MODEL_PRESETS.get(model, model)
     return {
         "mcp_servers": {
             "hermes-claude-bridge": {
                 "command": command,
                 "args": args or ["mcp-server"],
-                "env": {},
+                "env": env,
                 "enabled": True,
             }
         }
