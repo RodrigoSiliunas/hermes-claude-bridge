@@ -21,9 +21,7 @@ async def test_mcp_tool_supports_bridge_url(monkeypatch):
             calls.append(("send_prompt", session_id, prompt, kwargs))
             return {"status": "completed", "stdout": "ok"}
 
-    monkeypatch.setattr(
-        "hermes_claude_bridge.mcp_server.BridgeClient", FakeClient
-    )
+    monkeypatch.setattr("hermes_claude_bridge.mcp_server.BridgeClient", FakeClient)
 
     server = create_mcp_server()
     result = await server.call_tool(

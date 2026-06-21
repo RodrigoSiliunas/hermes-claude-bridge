@@ -17,10 +17,13 @@ async def app():
 @pytest.mark.asyncio
 async def test_create_session_with_history_limit(app):
     async with AsyncClient(transport=ASGITransport(app), base_url="http://test") as http:
-        response = await http.post("/sessions", json={
-            "working_dir": "/tmp",
-            "max_history_events": 3,
-        })
+        response = await http.post(
+            "/sessions",
+            json={
+                "working_dir": "/tmp",
+                "max_history_events": 3,
+            },
+        )
         assert response.status_code == 201
         data = response.json()
         assert data["max_history_events"] == 3
