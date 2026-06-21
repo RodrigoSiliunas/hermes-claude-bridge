@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Any
 
 from hermes_claude_bridge.bridge import HermesClaudeBridge
@@ -18,7 +19,7 @@ async def handle_delegate(args: dict[str, Any], **kwargs: Any) -> str:
     model = args.get("model")
     permission_mode = args.get("permission_mode", "acceptEdits")
     timeout = args.get("timeout", 300)
-    bridge_url = args.get("bridge_url")
+    bridge_url = args.get("bridge_url") or os.environ.get("HERMES_CLAUDE_BRIDGE_URL")
     mode = args.get("mode", "headless")
     max_history_events = args.get("max_history_events", 10)
 
