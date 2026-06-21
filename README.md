@@ -287,8 +287,8 @@ To create a new release:
 ```bash
 # Update version in pyproject.toml and src/hermes_claude_bridge/__init__.py
 git add -A
-git commit -m "chore(release): bump version to v0.4.0"
-git tag v0.4.0
+git commit -m "chore(release): bump version to v0.5.0"
+git tag v0.5.0
 git push origin main --tags
 ```
 
